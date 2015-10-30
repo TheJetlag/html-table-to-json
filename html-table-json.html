@@ -1,0 +1,71 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>HTML Table to JSON</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            pre {outline: 1px solid #ccc;}
+            .string { color: green; }
+            .number { color: darkorange; }
+            .boolean { color: blue; }
+            .null { color: magenta; }
+            .key { color: red; }
+        </style>
+    </head>
+    <body>
+        <h3>Input:</h3>
+        <p>
+            Copy from an HTML Table and paste in the textarea below.
+            The first line is interpreted as the JSON attribute names, make sure its not empty.
+        </p>
+        <textarea id="source" rows="20" cols="100" style="width: 100%"></textarea><br>
+        <button onclick="convert()">Convert to JSON</button>
+    </body>
+
+    <h3>Result:</h3>
+    <pre id="result">...</pre>
+    <script>
+        var convert = function() {
+            var text = document.getElementById('source');
+            var lines = text.value.split('\n');
+            var attributeNames = lines[0].split('\t');
+            var objArr = [];
+
+            // iterate over each row
+            for (var i = 1; i < lines.length; i++) {
+                var obj = {};
+                // iterate over each cell in this row
+                var splitted = lines[i].split('\t');
+                for (var j = 0; j < splitted.length; j++) {
+                    obj[attributeNames[j]] = splitted[j];
+                }
+                objArr.push(obj);
+            }
+            document.getElementById('result').innerHTML = syntaxHighlight(objArr);
+        };
+
+        function syntaxHighlight(json) {
+            if (typeof json != 'string') {
+                 json = JSON.stringify(json, undefined, 2);
+            }
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                var cls = 'number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'key';
+                    } else {
+                        cls = 'string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        };
+    </script>
+</html>
